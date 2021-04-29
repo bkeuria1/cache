@@ -26,14 +26,16 @@ long Cache:: directMapped(int sizes){
 			DMcache[i][j] = 0;
 		}
 	}
+        int offset = (int)(log2(sizes)+5);
         for(int i =0;i<address.size();i++){
 		//figure out if its a hit or not
 		//find address and indeex
 		int block =floor( address[i]/32);
-		int index = block / sizes;	
+		int index = block%sizes;	
 		//cache line size 32 = 5 bits
 		//log2(sizes)
-        	int tag = address[i]>>((int)log2(sizes)+5);
+               // int offset = (int)log2(sizes)+5;
+        	int tag = address[i]>>offset;
 		if(DMcache[index][0]==1 && DMcache[index][1] == tag){
 			hits++;
 
@@ -47,4 +49,9 @@ long Cache:: directMapped(int sizes){
 
 	return hits;
 }
-
+long Cache:: setAssociative(int ways){
+	long hits = 0;
+	
+	long long SAcache[][ways]
+	return hits;
+}

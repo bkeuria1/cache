@@ -9,6 +9,7 @@ class Cache{
 		Cache();
 		Cache( vector<char>instruction,vector< long long> address);
 		long directMapped(int);
+		long setAssociative(int);
 	
 	private:
 		vector<char>instruction;
