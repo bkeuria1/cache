@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <cmath>
+#include <ctime>
+#include <chrono>
 #include <climits>
 using namespace std;
 
@@ -12,10 +14,17 @@ Cache::Cache(){
 struct entry{
 	long long tag;
 	long long valid; 
-	long long access;
+	float  access;
 };
 
-Cache::Cache(vector<char>_instruction,vector<long long>_address):instruction(_instruction), address(_address){}
+//float x= 0;
+auto start_time = 0;
+
+Cache::Cache(vector<char>_instruction,vector<long long>_address):instruction(_instruction), address(_address){
+//
+	start_time = chrono::high_resolution_clock::now();
+
+}
 
 long Cache:: directMapped(int sizes){
 
@@ -63,6 +72,7 @@ long Cache:: setAssociative(int ways){
   //      cout<<"SETs: "<<sets;
 	entry SAcache[sets][ways]; 
 //	long long lru [sets][ways]; //keep track of the count
+//	time_req = clock();
 	for(int i=0;i<sets;i++){
 		for(int j=0;j<ways;j++){
 			SAcache[i][j].tag = -1;
@@ -83,9 +93,10 @@ long Cache:: setAssociative(int ways){
 		//traverse through each way in the in the set
 		for(int j = 0;j<ways;j++){
 			if(SAcache[index][j].tag == tag && SAcache[index][j].valid == 1){
-				//found a hit
+				auto current_time = chrono::high_resolution_clock::now();
+                               // float x = time_req;
 				hits++;
-				SAcache[index][j].access++;
+				SAcache[index][j].access = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
 				found = true;
 				break;	
 			}	
@@ -96,10 +107,12 @@ long Cache:: setAssociative(int ways){
 			//go through the ways and if there is a an empty entry
 			for(int k = 0;k<ways;k++){
 				if(SAcache[index][k].valid ==0){
+					//float x = time_req;
 					//found indvalid page, can write
+					auto current_time = chrono::high_resolution_clock::now();
 					SAcache[index][k].valid = 1;
 					SAcache[index][k].tag = tag;
-					SAcache[index][k].access = 0;
+					SAcache[index][k].access = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
 					empty = true;
 					break;
 				}
@@ -108,16 +121,17 @@ long Cache:: setAssociative(int ways){
 		if(!empty){
 			//need to find the Least recently used block
 			int minIndex = -1;
-			int minAccess = INT_MAX;
+			int minAccess = INT_MIN;
 			for(int l = 0; l<ways; l++){
-				if(SAcache[index][l].access<minAccess){
+				if(SAcache[index][l].access >minAccess){
 					minAccess = SAcache[index][l].access;
 					minIndex = l;
 				}
 			}
+			auto current_time = chrono::high_resolution_clock::now();
 			SAcache[index][minIndex].valid = 1;
 			SAcache[index][minIndex].tag = tag;
-			SAcache[index][minIndex].access = 0;
+			SAcache[index][minIndex].access = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
 
 		}
 	}   	
