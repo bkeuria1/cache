@@ -42,8 +42,10 @@ long Cache:: directMapped(int sizes){
 			DMcache[i][j] = 0;
 		}
 	}
+       	
         int offset = (int)(log2(sizes)+5);
-        for(int i =0;i<address.size();i++){
+        cout<<offset<<endl;
+	for(int i =0;i<address.size();i++){
 		//figure out if its a hit or not
 		//find address and indeex
 		int block =floor( address[i]/32);
@@ -80,14 +82,16 @@ long Cache:: setAssociative(int ways){
 		//	lru[i][j] = 0;
 		}
 	}
-//        int debug = 0; 
-        int offset = (int)(log2(sets) + 5); //offset to get tag value 
+//        int debug = 0;
+	cout<<ways<<" associative cache and 16KB size cache, 32 byte line"<<endl;
+	cout<<"SETS: "<<sets<<endl; 
+        int  offset = (int)(log2(sets)+5); //offset to get tag value
+	cout<<"Offset: "<<offset<<endl; 
  	for(int i =0;i<address.size();i++){
 		int block = floor(address[i]/32);
 
-		int index = block%sets //get the set number
-;
-		int tag = address[i]>>offset;  //get the tag
+		int index = block%sets; //get the set number
+		long tag = address[i]>>offset;  //get the tag
 		bool found = false;
 		//traverse through each way in the in the set
 		for(int j = 0;j<ways;j++){
@@ -105,7 +109,9 @@ long Cache:: setAssociative(int ways){
 		}
 		//bring data in cache	
 		bool empty = false;
+
 		if(!found){
+		//	cout<<"Cache miss -not found"<<endl;
 			//go through the ways and if there is a an empty entry
 			for(int k = 0;k<ways;k++){
 				if(SAcache[index][k].valid ==0){
@@ -120,10 +126,11 @@ long Cache:: setAssociative(int ways){
 					empty = true;
 					break;
 				}
-			}
+			
 		}
 		if(!empty){
 			//need to find the Least recently used block
+		//	cout<<"Replacing cache lru"<<endl;
 			int minIndex = -1;
 			int least = INT_MAX;
 			for(int l = 0; l<ways; l++){
@@ -132,15 +139,20 @@ long Cache:: setAssociative(int ways){
 					minIndex = l;
 				}
 			}
-			//auto current_time = chrono::high_resolution_clock::now();
+		
 			SAcache[index][minIndex].valid = 1;
 			SAcache[index][minIndex].tag = tag;
 			SAcache[index][minIndex].access = i;
-			//chrono::duration<double, std::milli> (std::chrono::high_resolution_clock::now() - start_time).count();
-		//	SAcache[index][minIndex].access = chrono::duration_cast<chrono::seconds>(current_time - start_time).count();
-
+		
+		}
 		}
 	}   	
 	
 	return hits;
+}
+
+long Cache:: hotColdLRU(){
+	long hits = 0;
+	return hits;
+
 }

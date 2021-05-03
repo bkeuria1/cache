@@ -10,7 +10,7 @@ class Cache{
 		Cache( vector<char>instruction,vector< long long> address);
 		long directMapped(int);
 		long setAssociative(int);
-	
+		long hotColdLRU();
 	private:
 		vector<char>instruction;
 		vector< long long> address;
