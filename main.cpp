@@ -17,7 +17,9 @@ int main(int argc, char*argv[]){
 		address.push_back(addr);
         }
 	Cache cache(instruction, address);
-	cout<<cache.directMapped(1024)<<endl;
+//	cout<<cache.directMapped(1024)<<endl;
 	cout<<cache.setAssociative(16)<<endl;
-	cout<<cache.setAssociative(512)<<endl;
+//	cout<<cache.setAssociative(512)<<endl;
+	cout<<cache.noAlloc(2)<<endl;
+	cout<<cache.nextLine(2)<<endl;
 }

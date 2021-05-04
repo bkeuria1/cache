@@ -11,6 +11,8 @@ class Cache{
 		long directMapped(int);
 		long setAssociative(int);
 		long hotColdLRU();
+		long noAlloc(int);
+		long nextLine(int);
 	private:
 		vector<char>instruction;
 		vector< long long> address;

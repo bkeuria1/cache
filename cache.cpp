@@ -111,26 +111,98 @@ long Cache:: setAssociative(int ways){
 		bool empty = false;
 
 		if(!found){
-		//	cout<<"Cache miss -not found"<<endl;
+		
+			int minIndex = -1;
+			int least = INT_MAX;
+			for(int l = 0; l<ways; l++){
+				if(SAcache[index][l].access<least){
+					least = SAcache[index][l].access;
+					minIndex = l;
+				}
+			}
+		
+			SAcache[index][minIndex].valid = 1;
+			SAcache[index][minIndex].tag = tag;
+			SAcache[index][minIndex].access = i;
+		
+	
+		}
+	}   	
+	
+	return hits;
+}
+
+long Cache:: hotColdLRU(){
+	long hits = 0;
+	int sets = 1; //fully associative, one cache
+	int ways = 512; 
+	entry cache[ways];
+	vector<int>hotCold(511,0);
+	int offset = 5;
+ 	for(int i = 0;i<address.size();i++){
+		int block = floor(address[i]/32);
+		int index = block%sets;
+		long tag = address[i]>>offset;	
+		if(cache[index].tag == tag && cache[index].valid == 1){
+			hits++;
+		}
+	}	
+	return hits;
+
+}
+
+
+long Cache:: noAlloc(int ways){
+
+	long hits = 0;
+    
+	int sets = 16384/(32*ways);	
+ 
+	entry SAcache[sets][ways];  
+	for(int i=0;i<sets;i++){
+		for(int j=0;j<ways;j++){
+			SAcache[i][j].tag = -1;
+			SAcache[i][j].valid = 0;
+			SAcache[i][j].access = 0;
+		}
+	}
+
+
+        int  offset = (int)(log2(sets)+5); //offset to get tag value
+	cout<<"Offset: "<<offset<<endl; 
+ 	for(int i =0;i<address.size();i++){
+		int block = floor(address[i]/32);
+
+		int index = block%sets; //get the set number
+		long tag = address[i]>>offset;  //get the tag
+		bool found = false;
+		//traverse through each way in the in the set
+		for(int j = 0;j<ways;j++){
+			if(SAcache[index][j].tag == tag && SAcache[index][j].valid == 1){
+			  
+				hits++;
+				SAcache[index][j].access = i;
+				found = true;
+				break;	
+			}	
+		}
+		//bring data in cache	
+		bool empty = false;
+
+		if(!found && instruction[i]!='S'){
 			//go through the ways and if there is a an empty entry
 			for(int k = 0;k<ways;k++){
 				if(SAcache[index][k].valid ==0){
-					//float x = time_req;
 					//found indvalid page, can write
-					//auto current_time = chrono::high_r
 					SAcache[index][k].valid = 1;
 					SAcache[index][k].tag = tag;
 					SAcache[index][k].access = i;
-  			//chrono::duration<double, std::milli> (std::chrono::high_resolution_clock::now() - start_time).count();
-					//SAcache[index][k].access = 0; //((float)t)/CLOCKS_PER_SEC;
 					empty = true;
-					break;
+				break;
 				}
 			
 		}
 		if(!empty){
-			//need to find the Least recently used block
-		//	cout<<"Replacing cache lru"<<endl;
 			int minIndex = -1;
 			int least = INT_MAX;
 			for(int l = 0; l<ways; l++){
@@ -150,9 +222,90 @@ long Cache:: setAssociative(int ways){
 	
 	return hits;
 }
-
-long Cache:: hotColdLRU(){
+long Cache:: nextLine(int ways){
 	long hits = 0;
+        
+	int sets = 16384/(32*ways);	
+  
+	entry SAcache[sets][ways];  
+
+	for(int i=0;i<sets;i++){
+		for(int j=0;j<ways;j++){
+			SAcache[i][j].tag = -1;
+			SAcache[i][j].valid = 0;
+			SAcache[i][j].access = 0;
+	
+		}
+	}
+        int  offset = (int)(log2(sets)+5); //offset to get tag value
+
+ 	for(int i =0;i<address.size();i++){
+		int block = floor(address[i]/32);
+
+		int index = block%sets; //get the set number
+		int nextIndex = (block+1)%sets;
+		long tag = address[i]>>offset;  //get the tag
+	        long nextTag =( address[i]+32)>>offset;
+		bool found = false;
+		//traverse through each way in the in the set
+		for(int j = 0;j<ways;j++){
+			if(SAcache[index][j].tag == tag && SAcache[index][j].valid == 1){
+				hits++;
+				SAcache[index][j].access = i;
+				found = true;
+				break;	
+			}	
+		}
+		bool nextFound = false;
+		for(int j = 0;j<ways;j++){
+                        if(SAcache[nextIndex][j].tag ==nextTag && SAcache[nextIndex][j].valid == 1){
+                               
+                                SAcache[nextIndex][j].access = i;
+                               	nextFound = true;
+                                break;
+                        }
+                }
+		
+		bool empty = false;
+
+		if(!found){
+			int minIndex = -1;
+                        int least = INT_MAX;
+                        for(int l = 0; l<ways; l++){
+                                if(SAcache[index][l].access<least){
+                                        least = SAcache[index][l].access;
+                                        minIndex = l;
+                                }
+                        }
+
+                        SAcache[index][minIndex].valid = 1;
+                        SAcache[index][minIndex].tag = tag;
+                        SAcache[index][minIndex].access = i;
+			
+		}
+	
+		
+		if(!nextFound){
+			//need to find the Least recently used block
+			int minIndex = -1;
+			int least = INT_MAX;
+			for(int l = 0; l<ways; l++){
+				if(SAcache[nextIndex][l].access<least){
+					least = SAcache[nextIndex][l].access;
+					minIndex = l;
+				}
+			}
+		
+			SAcache[nextIndex][minIndex].valid = 1;
+			SAcache[nextIndex][minIndex].tag = nextTag;
+			SAcache[nextIndex][minIndex].access = i;
+		
+		
+		}
+		
+	}   	
+	
 	return hits;
+
 
 }
