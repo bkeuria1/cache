@@ -33,10 +33,8 @@ long Cache:: directMapped(int sizes){
        
 	//Block address mode number of block in cache
 	//Since 32 bits, 3
-	//Cache size = Number of sets * Number of ways * Block size 
-	//need to store tag and data in table
-        //calculate number of blocks
-	long long DMcache [sizes][2]; //one entry to store valid bit , one entry to store tag
+	//Cache size = Number of sets * Num
+	long long DMcache [sizes][2];
 	for(int i = 0; i<sizes;i++){
 		for(int j=0;j<2;j++){
 			DMcache[i][j] = 0;
@@ -96,13 +94,9 @@ long Cache:: setAssociative(int ways){
 		//traverse through each way in the in the set
 		for(int j = 0;j<ways;j++){
 			if(SAcache[index][j].tag == tag && SAcache[index][j].valid == 1){
-			       //	auto current_time = chrono::high_resolution_clock::now();
-                               // float x = time_req;
+			      
 				hits++;
 				SAcache[index][j].access = i;
-//chrono::duration<double, std::milli> (std::chrono::high_resolution_clock::now() - start_time).count();
-				//t = clock()-t;
-				//SAcache[index][j].access = ((float)t)/CLOCKS_PER_SEC;
 				found = true;
 				break;	
 			}	
@@ -111,7 +105,17 @@ long Cache:: setAssociative(int ways){
 		bool empty = false;
 
 		if(!found){
-		
+			for(int k=0;k<ways;k++){
+				if(SAcache[index][k].valid==0){
+					SAcache[index][k].valid = 1;
+					SAcache[index][k].tag = tag;
+					SAcache[index][k].access = i;
+					empty = true;
+					break;
+				}
+			}	
+
+		if(!empty){
 			int minIndex = -1;
 			int least = INT_MAX;
 			for(int l = 0; l<ways; l++){
@@ -124,7 +128,7 @@ long Cache:: setAssociative(int ways){
 			SAcache[index][minIndex].valid = 1;
 			SAcache[index][minIndex].tag = tag;
 			SAcache[index][minIndex].access = i;
-		
+		}
 	
 		}
 	}   	
@@ -269,6 +273,17 @@ long Cache:: nextLine(int ways){
 		bool empty = false;
 
 		if(!found){
+		 for(int k=0;k<ways;k++){
+                                if(SAcache[index][k].valid==0){
+                                        SAcache[index][k].valid = 1;
+                                        SAcache[index][k].tag = tag;
+                                        SAcache[index][k].access = i;
+                                        empty = true;
+                                        break;
+                                }
+                        }	
+                if(!empty){
+                       
 			int minIndex = -1;
                         int least = INT_MAX;
                         for(int l = 0; l<ways; l++){
@@ -284,8 +299,19 @@ long Cache:: nextLine(int ways){
 			
 		}
 	
-		
+		}
+		empty = false;
 		if(!nextFound){
+			  for(int k=0;k<ways;k++){
+                                if(SAcache[nextIndex][k].valid==0){
+                                        SAcache[nextIndex][k].valid = 1;
+                                        SAcache[nextIndex][k].tag = nextTag;
+                                        SAcache[nextIndex][k].access = i;
+                                        empty = true;
+                                        break;
+                                }
+                        }
+			if(!empty){
 			//need to find the Least recently used block
 			int minIndex = -1;
 			int least = INT_MAX;
@@ -301,6 +327,7 @@ long Cache:: nextLine(int ways){
 			SAcache[nextIndex][minIndex].access = i;
 		
 		
+		}
 		}
 		
 	}   	
