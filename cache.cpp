@@ -339,7 +339,7 @@ long Cache:: nextLine(int ways){
 
 long Cache::  preFetchMiss(int ways){
 
-	long hits = 0;
+		long hits = 0;
         
 	int sets = 16384/(32*ways);	
   
@@ -363,6 +363,8 @@ long Cache::  preFetchMiss(int ways){
 		long tag = address[i]>>offset;  //get the tag
 	        long nextTag =( address[i]+32)>>offset;
 		bool found = false;
+		bool empty = false;
+		bool nextFound = false;
 		//traverse through each way in the in the set
 		for(int j = 0;j<ways;j++){
 			if(SAcache[index][j].tag == tag && SAcache[index][j].valid == 1){
@@ -373,7 +375,7 @@ long Cache::  preFetchMiss(int ways){
 			}	
 		}
 		if(!found){
-		bool nextFound = false;
+		//bool nextFound = false;
 		for(int j = 0;j<ways;j++){
                         if(SAcache[nextIndex][j].tag ==nextTag && SAcache[nextIndex][j].valid == 1){
                                
@@ -383,9 +385,20 @@ long Cache::  preFetchMiss(int ways){
                         }
                 }
 		
-		bool empty = false;
+		
 
 		
+		 for(int k=0;k<ways;k++){
+                                if(SAcache[index][k].valid==0){
+                                        SAcache[index][k].valid = 1;
+                                        SAcache[index][k].tag = tag;
+                                        SAcache[index][k].access = i;
+                                        empty = true;
+                                        break;
+                                }
+                   }	
+                if(!empty){
+                       
 			int minIndex = -1;
                         int least = INT_MAX;
                         for(int l = 0; l<ways; l++){
@@ -399,10 +412,21 @@ long Cache::  preFetchMiss(int ways){
                         SAcache[index][minIndex].tag = tag;
                         SAcache[index][minIndex].access = i;
 			
-		
+		}
 	
 		
+		empty = false;
 		if(!nextFound){
+			  for(int k=0;k<ways;k++){
+                                if(SAcache[nextIndex][k].valid==0){
+                                        SAcache[nextIndex][k].valid = 1;
+                                        SAcache[nextIndex][k].tag = nextTag;
+                                        SAcache[nextIndex][k].access = i;
+                                        empty = true;
+                                        break;
+                                }
+                        }
+			if(!empty){
 			//need to find the Least recently used block
 			int minIndex = -1;
 			int least = INT_MAX;
@@ -420,7 +444,10 @@ long Cache::  preFetchMiss(int ways){
 		
 		}
 		}
+		}
+		
 	}   	
 	
 	return hits;
+     
 }
