@@ -13,6 +13,7 @@ class Cache{
 		long hotColdLRU();
 		long noAlloc(int);
 		long nextLine(int);
+		long preFetchMiss(int);
 	private:
 		vector<char>instruction;
 		vector< long long> address;

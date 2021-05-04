@@ -16,10 +16,36 @@ int main(int argc, char*argv[]){
 		instruction.push_back(instr);
 		address.push_back(addr);
         }
+	int  sizes[] = {32,128,512,1024};
+	int assoc [] = {2,4,8,16};
 	Cache cache(instruction, address);
-//	cout<<cache.directMapped(1024)<<endl;
-	cout<<cache.setAssociative(16)<<endl;
-//	cout<<cache.setAssociative(512)<<endl;
-	cout<<cache.noAlloc(2)<<endl;
-	cout<<cache.nextLine(2)<<endl;
+	ofstream myfile;
+	myfile.open(argv[2]);
+	
+	//direct mapped
+	for(auto &i: sizes){
+		myfile<<cache.directMapped(i)<<","<<address.size()<<"; ";
+	}
+	myfile<<"\n";	
+	for(auto &i: assoc){
+                myfile<<cache.setAssociative(i)<<","<<address.size()<<"; ";
+        }
+	myfile<<"\n";	
+	myfile<<cache.setAssociative(512)<<","<<address.size()<<"; ";
+	myfile<<"\n";
+	myfile<<cache.hotColdLRU()<<","<<address.size()<<"; ";
+	myfile<<"\n";
+	for(auto &i: assoc){
+                myfile<<cache.noAlloc(i)<<","<<address.size()<<"; ";
+        }
+	myfile<<"\n";
+	for(auto &i: assoc){
+                myfile<<cache.nextLine(i)<<","<<address.size()<<"; ";
+        }
+	myfile<<"\n";
+	for(auto &i: assoc){
+                myfile<<cache.preFetchMiss(i)<<","<<address.size()<<"; ";
+        }
+
+
 }

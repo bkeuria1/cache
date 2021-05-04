@@ -309,3 +309,91 @@ long Cache:: nextLine(int ways){
 
 
 }
+
+long Cache::  preFetchMiss(int ways){
+
+	long hits = 0;
+        
+	int sets = 16384/(32*ways);	
+  
+	entry SAcache[sets][ways];  
+
+	for(int i=0;i<sets;i++){
+		for(int j=0;j<ways;j++){
+			SAcache[i][j].tag = -1;
+			SAcache[i][j].valid = 0;
+			SAcache[i][j].access = 0;
+	
+		}
+	}
+        int  offset = (int)(log2(sets)+5); //offset to get tag value
+
+ 	for(int i =0;i<address.size();i++){
+		int block = floor(address[i]/32);
+
+		int index = block%sets; //get the set number
+		int nextIndex = (block+1)%sets;
+		long tag = address[i]>>offset;  //get the tag
+	        long nextTag =( address[i]+32)>>offset;
+		bool found = false;
+		//traverse through each way in the in the set
+		for(int j = 0;j<ways;j++){
+			if(SAcache[index][j].tag == tag && SAcache[index][j].valid == 1){
+				hits++;
+				SAcache[index][j].access = i;
+				found = true;
+				break;	
+			}	
+		}
+		if(!found){
+		bool nextFound = false;
+		for(int j = 0;j<ways;j++){
+                        if(SAcache[nextIndex][j].tag ==nextTag && SAcache[nextIndex][j].valid == 1){
+                               
+                                SAcache[nextIndex][j].access = i;
+                               	nextFound = true;
+                                break;
+                        }
+                }
+		
+		bool empty = false;
+
+		
+			int minIndex = -1;
+                        int least = INT_MAX;
+                        for(int l = 0; l<ways; l++){
+                                if(SAcache[index][l].access<least){
+                                        least = SAcache[index][l].access;
+                                        minIndex = l;
+                                }
+                        }
+
+                        SAcache[index][minIndex].valid = 1;
+                        SAcache[index][minIndex].tag = tag;
+                        SAcache[index][minIndex].access = i;
+			
+		
+	
+		
+		if(!nextFound){
+			//need to find the Least recently used block
+			int minIndex = -1;
+			int least = INT_MAX;
+			for(int l = 0; l<ways; l++){
+				if(SAcache[nextIndex][l].access<least){
+					least = SAcache[nextIndex][l].access;
+					minIndex = l;
+				}
+			}
+		
+			SAcache[nextIndex][minIndex].valid = 1;
+			SAcache[nextIndex][minIndex].tag = nextTag;
+			SAcache[nextIndex][minIndex].access = i;
+		
+		
+		}
+		}
+	}   	
+	
+	return hits;
+}
