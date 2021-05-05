@@ -141,16 +141,55 @@ long Cache:: hotColdLRU(){
 	int sets = 1; //fully associative, one cache
 	int ways = 512; 
 	entry cache[ways];
-	vector<int>hotCold(511,0);
+	vector<int>hotCold(511,0); //everybit is set to 0 orginially.
 	int offset = 5;
+	bool found = false;
  	for(int i = 0;i<address.size();i++){
 		int block = floor(address[i]/32);
 		int index = block%sets;
 		long tag = address[i]>>offset;	
+		long hitCopy = 0;
 		if(cache[index].tag == tag && cache[index].valid == 1){
 			hits++;
+			hitCopy = index;
+			//upon a hit we have to update the tree
+			found = true;
+		//	break;
+		
+		int treeIndex = hitCopy;
+		if(found){
+			while(treeIndex!=0){
+				if(treeIndex%2 == 0){ //right child`					
+						treeIndex = (treeIndex-2)/2;
+						hotCold[treeIndex] = 0;
+					
+				}
+				else{
+					treeIndex = (treeIndex-1)/2;
+					hotCold[treeIndex] = 1;
+				}
+			}
 		}
-	}	
+		}
+		int coldestIndex = 0;
+		if(!found){
+		//go all the way down in the binary tree
+			for(int i = 0;i<log2(ways);i++){
+				if(hotCold[coldestIndex] == 0){
+					coldestIndex = (coldestIndex*2)+1;
+					hotCold[coldestIndex] =1;
+				}else{
+					coldestIndex = (coldestIndex*2)+2;
+                                        hotCold[coldestIndex] =0;
+				}
+			}
+			cache[coldestIndex+1-ways].tag = tag;
+			cache[coldestIndex+1-ways].valid = 1;
+			cache[coldestIndex+1-ways].access = i;	
+			
+		}
+		}
+		
 	return hits;
 
 }
