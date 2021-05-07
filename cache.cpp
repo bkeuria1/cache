@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <cmath>
-#include <ctime>
-#include <chrono>
+
 #include <climits>
 using namespace std;
 
@@ -17,13 +16,10 @@ struct entry{
 	float  access;
 };
 
-//float x= 0;
-chrono::high_resolution_clock::time_point start_time;
-clock_t t;
+
+
 Cache::Cache(vector<char>_instruction,vector<long long>_address):instruction(_instruction), address(_address){
-//
-	start_time = chrono::high_resolution_clock::now();
-        //t = clock();
+
 }
 
 long Cache:: directMapped(int sizes){
@@ -42,15 +38,13 @@ long Cache:: directMapped(int sizes){
 	}
        	
         int offset = (int)(log2(sizes)+5);
-        cout<<offset<<endl;
+//        cout<<offset<<endl;
 	for(int i =0;i<address.size();i++){
 		//figure out if its a hit or not
-		//find address and indeex
+
 		int block =floor( address[i]/32);
 		int index = block%sizes;	
-		//cache line size 32 = 5 bits
-		//log2(sizes)
-               // int offset = (int)log2(sizes)+5;
+		
         	int tag = address[i]>>offset;
 		if(DMcache[index][0]==1 && DMcache[index][1] == tag){
 			hits++;
@@ -81,10 +75,10 @@ long Cache:: setAssociative(int ways){
 		}
 	}
 //        int debug = 0;
-	cout<<ways<<" associative cache and 16KB size cache, 32 byte line"<<endl;
-	cout<<"SETS: "<<sets<<endl; 
+//	cout<<ways<<" associative cache and 16KB size cache, 32 byte line"<<endl;
+
         int  offset = (int)(log2(sets)+5); //offset to get tag value
-	cout<<"Offset: "<<offset<<endl; 
+//	cout<<"Offset: "<<offset<<endl; 
  	for(int i =0;i<address.size();i++){
 		int block = floor(address[i]/32);
 
@@ -138,58 +132,79 @@ long Cache:: setAssociative(int ways){
 
 long Cache:: hotColdLRU(){
 	long hits = 0;
-	int sets = 1; //fully associative, one cache
+	int sets = 1; //fully associative, one set
 	int ways = 512; 
 	entry cache[ways];
-	vector<int>hotCold(511,0); //everybit is set to 0 orginially.
+	vector<int>hotCold(511,0); //everybit is set to 0
 	int offset = 5;
 	bool found = false;
+	//loop through every address
  	for(int i = 0;i<address.size();i++){
+		found = false;
 		int block = floor(address[i]/32);
 		int index = block%sets;
 		long tag = address[i]>>offset;	
-		long hitCopy = 0;
-		if(cache[index].tag == tag && cache[index].valid == 1){
-			hits++;
-			hitCopy = index;
-			//upon a hit we have to update the tree
-			found = true;
-		//	break;
+		long hitCopy = 0; //copy of the way/cache line index
+	
+		 for(int k = 0;k<512;k++){
+			if(cache[k].tag == tag && cache[k].valid == 1){			
+				hits++;
+				hitCopy = k; //index of the hit
+				//upon a hit we have to update the tree
+				found = true;
+				cache[k].access = i; //not sure if I need this line?
+				break;	
 		
-		int treeIndex = hitCopy;
-		if(found){
-			while(treeIndex!=0){
-				if(treeIndex%2 == 0){ //right child`					
-						treeIndex = (treeIndex-2)/2;
+			}
+		}    
+
+	    	if(found){
+			//convert cache index into heap index
+			int treeIndex = hitCopy+511;
+			
+			while(treeIndex>0){
+				if(treeIndex%2 == 0){ //right child`									//right child indexes are even
+						treeIndex = (treeIndex-2)/2; //go to right childs parent 
 						hotCold[treeIndex] = 0;
 					
 				}
 				else{
-					treeIndex = (treeIndex-1)/2;
-					hotCold[treeIndex] = 1;
+			
+					treeIndex = (treeIndex-1)/2; //go to left child's parent
+				        hotCold[treeIndex] = 1;
 				}
+			
 			}
+		
 		}
-		}
-		int coldestIndex = 0;
-		if(!found){
+	
+	
+	
+
+		if(!found){   //on a miss find the place to insert the data
+			int coldestIndex = 0;
 		//go all the way down in the binary tree
-			for(int i = 0;i<log2(ways);i++){
+			while(coldestIndex<511){
 				if(hotCold[coldestIndex] == 0){
+					hotCold[coldestIndex] = 1;
 					coldestIndex = (coldestIndex*2)+1;
-					hotCold[coldestIndex] =1;
-				}else{
+					//hotCold[coldestIndex] =1;
+				}
+				else{
+					hotCold[coldestIndex] = 0;
 					coldestIndex = (coldestIndex*2)+2;
-                                        hotCold[coldestIndex] =0;
+                                        //hotCold[coldestIndex] =0;
 				}
 			}
-			cache[coldestIndex+1-ways].tag = tag;
-			cache[coldestIndex+1-ways].valid = 1;
-			cache[coldestIndex+1-ways].access = i;	
+			//convert heap index to tree index
+			coldestIndex = coldestIndex-511;
+			cache[coldestIndex].tag = tag;
+			cache[coldestIndex].valid = 1;
+			cache[coldestIndex].access = i;	
 			
 		}
 		}
-		
+	cout<<"LRU HOT COLD CACHE HITS:  "<<hits<<endl;
 	return hits;
 
 }
@@ -212,7 +227,7 @@ long Cache:: noAlloc(int ways){
 
 
         int  offset = (int)(log2(sets)+5); //offset to get tag value
-	cout<<"Offset: "<<offset<<endl; 
+//	cout<<"Offset: "<<offset<<endl; 
  	for(int i =0;i<address.size();i++){
 		int block = floor(address[i]/32);
 
@@ -241,7 +256,7 @@ long Cache:: noAlloc(int ways){
 					SAcache[index][k].tag = tag;
 					SAcache[index][k].access = i;
 					empty = true;
-				break;
+					break;
 				}
 			
 		}
