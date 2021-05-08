@@ -18,7 +18,7 @@ struct entry{
 
 
 
-Cache::Cache(vector<char>_instruction,vector<long long>_address):instruction(_instruction), address(_address){
+Cache::Cache(vector<char>_instruction,vector< long long>_address):instruction(_instruction), address(_address){
 
 }
 
@@ -134,76 +134,64 @@ long Cache:: hotColdLRU(){
 	long hits = 0;
 	int sets = 1; //fully associative, one set
 	int ways = 512; 
-	entry cache[ways];
+	long long c[ways];
+	
 	vector<int>hotCold(511,0); //everybit is set to 0
 	int offset = 5;
-	bool found = false;
+
 	//loop through every address
  	for(int i = 0;i<address.size();i++){
-		found = false;
-		int block = floor(address[i]/32);
-		int index = block%sets;
-		long tag = address[i]>>offset;	
-		long hitCopy = 0; //copy of the way/cache line index
+		bool found = false;
+		long long tag = address[i]>>offset;	
+		long hitCopy = 0; 
 	
 		 for(int k = 0;k<512;k++){
-			if(cache[k].tag == tag && cache[k].valid == 1){			
+			if(c[k] == tag){			
 				hits++;
-				hitCopy = k; //index of the hit
-				//upon a hit we have to update the tree
-				found = true;
-				cache[k].access = i; //not sure if I need this line?
-				break;	
-		
-			}
-		}    
-
-	    	if(found){
-			//convert cache index into heap index
-			int treeIndex = hitCopy+511;
-			
-			while(treeIndex>0){
-				if(treeIndex%2 == 0){ //right child`									//right child indexes are even
-						treeIndex = (treeIndex-2)/2; //go to right childs parent 
+				long treeIndex = k+511;
+				while(treeIndex!=0){
+					if(treeIndex%2 == 0){ 		
+						treeIndex = (treeIndex-2)/2; 
 						hotCold[treeIndex] = 0;
-					
-				}
+				
+					}
 				else{
-			
-					treeIndex = (treeIndex-1)/2; //go to left child's parent
-				        hotCold[treeIndex] = 1;
+					treeIndex = (treeIndex-1)/2; 
+					hotCold[treeIndex] = 1;
+                               
 				}
-			
-			}
-		
+				
+				}
+			found = true;
+			break;
 		}
 	
-	
+	}
 	
 
-		if(!found){   //on a miss find the place to insert the data
+	if(!found){   //on a miss find the place to insert the data
 			int coldestIndex = 0;
+			int level = 0;
 		//go all the way down in the binary tree
-			while(coldestIndex<511){
+			while(level<9){
 				if(hotCold[coldestIndex] == 0){
 					hotCold[coldestIndex] = 1;
-					coldestIndex = (coldestIndex*2)+1;
+					coldestIndex = coldestIndex*2 +1;
 					//hotCold[coldestIndex] =1;
 				}
 				else{
 					hotCold[coldestIndex] = 0;
-					coldestIndex = (coldestIndex*2)+2;
+					coldestIndex = coldestIndex*2+2;
                                         //hotCold[coldestIndex] =0;
 				}
+				level++;
 			}
 			//convert heap index to tree index
 			coldestIndex = coldestIndex-511;
-			cache[coldestIndex].tag = tag;
-			cache[coldestIndex].valid = 1;
-			cache[coldestIndex].access = i;	
-			
-		}
-		}
+			c[coldestIndex] = tag;		
+	}
+	
+     }
 	cout<<"LRU HOT COLD CACHE HITS:  "<<hits<<endl;
 	return hits;
 
