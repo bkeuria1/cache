@@ -132,67 +132,52 @@ long Cache:: setAssociative(int ways){
 
 long Cache:: hotColdLRU(){
 	long hits = 0;
-	int sets = 1; //fully associative, one set
+
 	int ways = 512; 
-	long long c[ways];
+	vector<unsigned long long>c(512,0);
 	
 	vector<int>hotCold(511,0); //everybit is set to 0
 	int offset = 5;
-
+	bool found = false;
 	//loop through every address
  	for(int i = 0;i<address.size();i++){
-		bool found = false;
-		long long tag = address[i]>>offset;	
-		long hitCopy = 0; 
-	
-		 for(int k = 0;k<512;k++){
-			if(c[k] == tag){			
+		found = false;
+		unsigned long long tag = address[i]>>5;
+		for(int k = 0;k<512;k++){
+			if(c[k] == tag){
 				hits++;
-				long treeIndex = k+511;
+				int treeIndex = k+511;
 				while(treeIndex!=0){
-					if(treeIndex%2 == 0){ 		
-						treeIndex = (treeIndex-2)/2; 
+					if(treeIndex%2==0){
+						treeIndex = (treeIndex-2)/2;
 						hotCold[treeIndex] = 0;
-				
+					}else{
+						treeIndex = (treeIndex-1)/2;
+                                                hotCold[treeIndex] = 1;
 					}
-				else{
-					treeIndex = (treeIndex-1)/2; 
-					hotCold[treeIndex] = 1;
-                               
 				}
-				
-				}
-			found = true;
-			break;
+				found = true;
+				break;
+			}
 		}
-	
-	}
-	
-
-	if(!found){   //on a miss find the place to insert the data
-			int coldestIndex = 0;
+		if(!found){
+			int cold = 0;
 			int level = 0;
-		//go all the way down in the binary tree
 			while(level<9){
-				if(hotCold[coldestIndex] == 0){
-					hotCold[coldestIndex] = 1;
-					coldestIndex = coldestIndex*2 +1;
-					//hotCold[coldestIndex] =1;
-				}
-				else{
-					hotCold[coldestIndex] = 0;
-					coldestIndex = coldestIndex*2+2;
-                                        //hotCold[coldestIndex] =0;
+				if(hotCold[cold] == 0){
+					hotCold[cold] =1;
+					cold = cold*2+1;
+				}else{
+					hotCold[cold] =0;
+                                        cold = cold*2+2;
+				
 				}
 				level++;
 			}
-			//convert heap index to tree index
-			coldestIndex = coldestIndex-511;
-			c[coldestIndex] = tag;		
+			cold = cold-511;
+			c[cold] = tag;
+		}
 	}
-	
-     }
-	cout<<"LRU HOT COLD CACHE HITS:  "<<hits<<endl;
 	return hits;
 
 }
